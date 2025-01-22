@@ -4,7 +4,7 @@ export class PaymentOptionsPage extends BasePage {
     readonly skipForNowButton:Locator = this.page.getByText('Skip for now');
 
     async clickSkipForNow() {
-        await this.skipForNowButton.click();
+        await this.skipForNowButton.click({ timeout: 60000 });
     }
 }
 

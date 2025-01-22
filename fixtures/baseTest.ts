@@ -1,9 +1,9 @@
 import { test as baseTest } from '@playwright/test';
-import { LoginPage, VendorPage, AddNewVendorPage, PaymentOptionsPage, VendorDetailsPage } from '../pages';
+import { LoginPage, VendorsPage, AddNewVendorPage, PaymentOptionsPage, VendorDetailsPage } from '../pages';
 
 interface PageObjects {
     loginPage: LoginPage;
-    vendorPage: VendorPage;
+    vendorsPage: VendorsPage;
     addNewVendorPage: AddNewVendorPage;
     paymentOptionsPage: PaymentOptionsPage;
     vendorDetailsPage: VendorDetailsPage;
@@ -29,8 +29,8 @@ export const test = baseTest.extend<PageObjects>({
     loginPage: async ({ page }, use) => {
         await use(new LoginPage(page)); 
     },
-    vendorPage: async ({ page }, use) => {
-        await use(new VendorPage(page)); 
+    vendorsPage: async ({ page }, use) => {
+        await use(new VendorsPage(page)); 
     },
     addNewVendorPage: async ({ page }, use) => {
         await use(new AddNewVendorPage(page)); 

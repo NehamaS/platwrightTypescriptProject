@@ -1,52 +1,53 @@
 import { test, expect } from '../fixtures/baseTest';
-import { VendorType, LoginType } from '../setup/types';
-import { INVALID_EMAIL_ADDRESS_ERROR_MSG, COMPANY_ALREADY_EXIST_ERROR_MSG, testParams } from '../setup/constants';
+import { VendorType } from '../setup/types';
+import { INVALID_EMAIL_ADDRESS_ERROR_MSG, COMPANY_ALREADY_EXIST_ERROR_MSG, USER_NAME, PASSWORD } from '../setup/constants';
+import { testParams } from '../setup/testsParams';
 import casual from 'casual';
 
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-const vendorDetails: VendorType = {
-    vendorBusinessName: casual.name,
+const generateVendorDetails = (): VendorType => ({
+    vendorBusinessName: casual.company_name,
     vendorContactName: casual.full_name,
     vendorEmailName: casual.email,
-    vendorPhone: `(972) ${casual.integer(100, 999)}-${casual.integer(1000, 9999)}`
-};
-
-const loginDetails: LoginType = {
-    userName: process.env.USER_NAME || 'autotest1+autotest-stg-automation-homeassignment-1@melio.com',
-    password: process.env.PASSWORD || '85z6Jiv#@L95XQ84'
-};
+    vendorPhone: `(972) ${casual.integer(100, 999)}-${casual.integer(1000, 9999)}`,
+});
 
 test.describe('Add New Vendor', () => {
-    test('verifies add new vendor', async ({ loginPage, vendorPage, addNewVendorPage, paymentOptionsPage, vendorDetailsPage, baseURL }) => {
+    test('verifies add new vendor', async ({ loginPage, vendorsPage, addNewVendorPage, paymentOptionsPage, vendorDetailsPage, baseURL }) => {
+        const vendorDetails = generateVendorDetails();
+
         await loginPage.goto(baseURL || '');
-        await loginPage.login(loginDetails);
-        await vendorPage.clickToAddVendor();
+        await loginPage.login({ userName: USER_NAME, password: PASSWORD });
+        await vendorsPage.clickToAddVendor();
         await addNewVendorPage.addVendor(vendorDetails);
         await paymentOptionsPage.clickSkipForNow();
 
-        const newVendorNotifMsg = await vendorPage.getNewVendorNotifMsg();
-        expect(newVendorNotifMsg).toBe(`New vendor ${vendorDetails.vendorBusinessName} added`); 
+        // Verify notification message
+        const newVendorNotifMsg = await vendorsPage.getNewVendorNotifMsg();
+        expect(newVendorNotifMsg).toBe(`New vendor ${vendorDetails.vendorBusinessName} added`);
 
-        await vendorPage.clickOnVendorByName(vendorDetails.vendorBusinessName || '');
+        // Verify vendor details
+        await vendorsPage.clickOnVendorByName(vendorDetails.vendorBusinessName || '');
         const currentVendorDetails: VendorType = await vendorDetailsPage.getAllVendorDetails();
         expect(currentVendorDetails).toEqual(vendorDetails);
     });
 
-    test('verifies relevant error when type invalid inputs', async({ loginPage, vendorPage, addNewVendorPage, baseURL }) => {
-        await loginPage.goto(baseURL || '');
-        await loginPage.login(loginDetails);
-        await vendorPage.clickToAddVendor();
+    test('verifies relevant error when typing invalid inputs', async ({ loginPage, vendorsPage, addNewVendorPage, baseURL }) => {
+        const vendorDetails = generateVendorDetails();
 
+        await loginPage.goto(baseURL || '');
+        await loginPage.login({ userName: USER_NAME, password: PASSWORD });
+        await vendorsPage.clickToAddVendor();
+
+        // Test "company already exists" error
         vendorDetails.vendorBusinessName = testParams.addVendor.alreadyExistVendor;
         await addNewVendorPage.addVendor(vendorDetails);
-        const companyAlreadyExistsErrorMsg = await vendorPage.getCompanyAlreadyExistsErrorMsg();
-        expect(companyAlreadyExistsErrorMsg).toBe(COMPANY_ALREADY_EXIST_ERROR_MSG); 
+        const companyAlreadyExistsErrorMsg = await vendorsPage.getCompanyAlreadyExistsErrorMsg();
+        expect(companyAlreadyExistsErrorMsg).toBe(COMPANY_ALREADY_EXIST_ERROR_MSG);
 
+        // Test "invalid email address" error
         vendorDetails.vendorEmailName = casual.name;
         await addNewVendorPage.addVendor(vendorDetails);
-        const inValidEmailAddressErrorMsg = await vendorPage.getEnterValidEmailAddressErrorMsg();
-        expect(inValidEmailAddressErrorMsg).toBe(INVALID_EMAIL_ADDRESS_ERROR_MSG); 
+        const invalidEmailAddressErrorMsg = await vendorsPage.getEnterValidEmailAddressErrorMsg();
+        expect(invalidEmailAddressErrorMsg).toBe(INVALID_EMAIL_ADDRESS_ERROR_MSG);
     });
 });
